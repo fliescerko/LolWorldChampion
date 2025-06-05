@@ -3,4 +3,6 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
+    <string name="damage_details_title">详细伤害信息</string>
+    <string name="damage_source_label">伤害来源详情：</string>
 </resources>

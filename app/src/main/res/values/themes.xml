@@ -11,6 +11,20 @@
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <!-- 自定义 ActionBar 样式 -->
+        <item name="android:actionBarStyle">@style/CustomActionBarStyle</item>
         <!-- Customize your theme here. -->
+    </style>
+
+    <!-- 自定义 ActionBar 样式 -->
+    <style name="CustomActionBarStyle" parent="@android:style/Widget.Holo.Light.ActionBar.Solid.Inverse">
+        <item name="android:titleTextStyle">@style/CustomActionBarTitleText</item>
+    </style>
+
+    <!-- 自定义 ActionBar 标题文本样式 -->
+    <style name="CustomActionBarTitleText" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
     </style>
 </resources>

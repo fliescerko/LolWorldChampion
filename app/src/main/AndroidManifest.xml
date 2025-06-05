@@ -13,7 +13,16 @@
         android:theme="@style/Theme.LolWorldChampion"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".BuildingDetailsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MonsterDetailsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".DamageDetailsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MatchListActivity"
             android:exported="true"
             android:label="@string/app_name">
             <intent-filter>
@@ -22,6 +31,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".TimelineActivity" />
     </application>
 
 </manifest>
