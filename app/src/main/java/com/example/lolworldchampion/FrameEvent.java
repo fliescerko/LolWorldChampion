@@ -6,7 +6,7 @@ import java.util.List;
 public class FrameEvent implements Serializable {
     private int timestamp;
     private String type;
-    private Integer realTimestamp;
+    private long realTimestamp;
     private Position position;
     private Integer participantId;
     private String participantName;
@@ -60,11 +60,11 @@ public class FrameEvent implements Serializable {
         this.type = type;
     }
 
-    public Integer getRealTimestamp() {
+    public long getRealTimestamp() {
         return realTimestamp;
     }
 
-    public void setRealTimestamp(Integer realTimestamp) {
+    public void setRealTimestamp(long realTimestamp) {
         this.realTimestamp = realTimestamp;
     }
 

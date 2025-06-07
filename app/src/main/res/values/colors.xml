@@ -7,6 +7,8 @@
     <color name="teal_700">#111A19</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="button_background_color">#D2E0AA</color> <!-- 紫色 -->
+    <color name="button_text_color">#FFFFFF</color> <!-- 白色 -->
     <!-- 主要颜色 -->
     <color name="primary_color">#7367ED</color>
     <!-- 次要颜色 -->
@@ -17,4 +19,5 @@
     <color name="text_color">#212121</color>
     <!-- 辅助文本颜色 -->
     <color name="secondary_text_color">#757575</color>
+    <color name = "beijing">#F9F2EF</color>
 </resources>

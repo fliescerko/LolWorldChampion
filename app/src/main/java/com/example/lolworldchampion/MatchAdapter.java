@@ -1,5 +1,6 @@
 package com.example.lolworldchampion;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,12 +20,16 @@ public class MatchAdapter extends RecyclerView.Adapter<MatchAdapter.MatchViewHol
     private OnMatchClickListener listener;
 
     public interface OnMatchClickListener {
-        void onMatchClick(String jsonFileName);
+        void onMatchClick(String matchId);
     }
 
     public MatchAdapter(List<MatchSummary> matchSummaries, OnMatchClickListener listener) {
         this.matchSummaries = matchSummaries;
         this.listener = listener;
+    }
+    public void updateData(List<MatchSummary> newData) {
+        this.matchSummaries = newData;
+        notifyDataSetChanged(); // 通知适配器数据已变更
     }
 
     @NonNull
@@ -34,17 +39,25 @@ public class MatchAdapter extends RecyclerView.Adapter<MatchAdapter.MatchViewHol
         return new MatchViewHolder(view);
     }
 
+    // MatchAdapter.java
     @Override
     public void onBindViewHolder(@NonNull MatchViewHolder holder, int position) {
         MatchSummary matchSummary = matchSummaries.get(position);
-        holder.matchName.setText(matchSummary.getBlueTeamFullName() + " vs " + matchSummary.getRedTeamFullName());
-        holder.matchDate.setText(matchSummary.getMatchId());
 
-        holder.itemView.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onMatchClick(matchSummary.getJsonFileName());
-            }
-        });
+        // 标题格式："Team1 vs Team2 (Game)"
+        String title = String.format("%s vs %s (%s)",
+                matchSummary.getBlueTeamFullName(),
+                matchSummary.getRedTeamFullName(),
+                matchSummary.getGame());
+
+        // 日期显示："开始时间: 时间戳"
+        String dateText = "开始时间: " + matchSummary.getStartTime();
+
+        holder.matchName.setText(title);
+        holder.matchDate.setText(dateText); // 更新为显示 start_time
+
+        holder.itemView.setOnClickListener(v -> listener.onMatchClick(matchSummary.getMatchId()));
+
     }
 
     @Override

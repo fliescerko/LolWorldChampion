@@ -59,7 +59,7 @@
                     android:id="@+id/map_marker"
                     android:layout_width="10dp"
                     android:layout_height="10dp"
-                    android:background="@color/secondary_color"
+                    android:background="@drawable/ic_kills"
                     android:visibility="gone" />
 
 

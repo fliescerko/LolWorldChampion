@@ -27,4 +27,9 @@
         <item name="android:textSize">20sp</item>
         <item name="android:textStyle">bold</item>
     </style>
+    <!-- Base application theme. -->
+    <style name="Base.Theme.LolWorldChampion" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    </style>
 </resources>

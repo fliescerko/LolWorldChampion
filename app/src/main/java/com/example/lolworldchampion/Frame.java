@@ -1,13 +1,12 @@
 package com.example.lolworldchampion;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Frame {
+public class Frame implements Serializable {
+    private static final long serialVersionUID = 1L;
     private int frameInterval;
     private List<FrameEvent> events;
-
-    public Frame() {
-    }
 
     public int getFrameInterval() {
         return frameInterval;

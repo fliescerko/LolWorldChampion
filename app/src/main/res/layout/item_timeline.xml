@@ -8,10 +8,9 @@
     app:cardElevation="4dp"
     android:minHeight="100dp">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:padding="8dp">
 
         <ImageView
@@ -21,12 +20,13 @@
             android:adjustViewBounds="true"
             android:scaleType="centerInside"
             android:layout_marginEnd="8dp"
-            android:src="@drawable/ic_launcher_background" /> <!-- 默认图标 -->
+            android:src="@drawable/ic_launcher_background" />
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_toEndOf="@id/event_icon"
+            android:layout_centerVertical="true"
             android:orientation="vertical">
 
             <TextView
@@ -52,8 +52,25 @@
                 android:ellipsize="end"
                 android:textSize="14sp"
                 android:textColor="@color/secondary_text_color"
-                android:visibility="visible"
-                />
+                android:visibility="visible"/>
+
+            <EditText
+                android:id="@+id/noteEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="添加备注"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
         </LinearLayout>
-    </LinearLayout>
+
+        <Button
+            android:id="@+id/favoriteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="收藏"
+            android:backgroundTint="@color/purple_500"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"/>
+    </RelativeLayout>
 </androidx.cardview.widget.CardView>

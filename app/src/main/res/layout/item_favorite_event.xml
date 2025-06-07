@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="?android:attr/selectableItemBackground"
+    android:clickable="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="4dp">
+
+        <TextView
+            android:id="@+id/favoriteEventTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="00:00"
+            android:textSize="14sp"
+            android:textColor="#666666"/>
+
+        <TextView
+            android:id="@+id/favoriteEventType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="事件类型"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginLeft="8dp"/>
+
+        <View
+            android:id="@+id/deleteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_gravity="end"
+            android:layout_weight="1"
+            android:gravity="end">
+        </View>
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@android:drawable/ic_menu_delete"
+            android:contentDescription="删除收藏"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/favoriteMatchId"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="比赛ID: "
+        android:textSize="14sp"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/favoriteEventDetails"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="事件详情"
+        android:textSize="14sp"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/favoriteEventNote"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="备注信息"
+        android:textSize="14sp"
+        android:textColor="#666666"
+        android:background="#f0f0f0"
+        android:padding="8dp"
+        android:minHeight="40dp"/>
+</LinearLayout>

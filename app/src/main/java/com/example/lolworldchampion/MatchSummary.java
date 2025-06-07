@@ -1,20 +1,22 @@
 package com.example.lolworldchampion;
 
-import static java.lang.System.out;
-
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MatchSummary {
+public class MatchSummary implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String matchId;
     private String blueTeamFullName;
     private String redTeamFullName;
     private String winningTeam;
     private String jsonFileName;
     private String gameId;
+    private String game;
+    private String startTime; // 添加 startTime 字段
     private List<Frame> frames; // 存储时间线数据
 
-    public MatchSummary(String matchId, String blueTeamFullName, String redTeamFullName, String winningTeam) {
+    public MatchSummary(String matchId, String blueTeamFullName, String redTeamFullName, String winningTeam, String game, String startTime) {
         this.matchId = matchId;
         this.blueTeamFullName = blueTeamFullName;
         this.redTeamFullName = redTeamFullName;
@@ -22,8 +24,10 @@ public class MatchSummary {
         this.jsonFileName = matchId ; // JSON文件名基于match_id命名
         this.frames = new ArrayList<>();
         this.gameId = gameId;
+        this.game = game;
+        this.startTime = startTime; // 初始化 startTime 字段
     }
-
+    public MatchSummary() {}
     // Getter 和 Setter 方法
     public String getMatchId() {
         return matchId;
@@ -32,6 +36,7 @@ public class MatchSummary {
     public void setMatchId(String matchId) {
         this.matchId = matchId;
     }
+
     public String getgameId() {
         return gameId;
     }
@@ -65,8 +70,6 @@ public class MatchSummary {
     }
 
     public String getJsonFileName() {
-
-
         return jsonFileName;
     }
 
@@ -80,5 +83,21 @@ public class MatchSummary {
 
     public void setFrames(List<Frame> frames) {
         this.frames = frames;
+    }
+
+    public String getGame() {
+        return game;
+    }
+
+    public void setGame(String game) {
+        this.game = game;
+    }
+
+    public String getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
     }
 }

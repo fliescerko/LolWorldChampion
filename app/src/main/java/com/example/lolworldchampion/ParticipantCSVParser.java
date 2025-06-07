@@ -14,7 +14,7 @@ public class ParticipantCSVParser {
     public static Map<String, Map<Integer, String>> parseParticipantCSV(Context context) {
         Map<String, Map<Integer, String>> participantMap = new HashMap<>();
 
-        try (InputStream inputStream = context.getAssets().open("participantname.csv");
+        try (InputStream inputStream = context.getAssets().open("participantname_1.csv");
              BufferedReader reader = new BufferedReader(
                      new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
             String line;

@@ -10,33 +10,27 @@ import java.util.List;
 public class CSVParser {
     public static List<MatchSummary> parseMatchSummaries(InputStream inputStream) {
         List<MatchSummary> matchSummaries = new ArrayList<>();
-
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
-
-            reader.readLine();
-
+            reader.readLine(); // 跳过标题行
             while ((line = reader.readLine()) != null) {
-                try {
-                    String[] fields = parseCSVLine(line);
+                String[] fields = parseCSVLine(line);
+                if (fields.length >= 8) { // 确保列数足够
+                    String matchId = fields[0].trim();
+                    String blueTeam = fields[1].trim();
+                    String redTeam = fields[2].trim();
+                    String winner = fields[3].trim();
+                    String startTime = fields[4].trim(); // 第5列
+                    String game = fields[6].trim(); // 第7列
 
-                    if (fields.length >= 4) {
-                        String matchId = fields[0].trim();
-                        String blueTeam = fields[1].trim();
-                        String redTeam = fields[2].trim();
-                        String winner = fields[3].trim();
-
-                        matchSummaries.add(new MatchSummary(matchId, blueTeam, redTeam, winner));
-                    }
-                } catch (Exception e) {
-                    Log.e("CSVParser", "Error parsing line: " + line, e);
+                    MatchSummary match = new MatchSummary(matchId, blueTeam, redTeam, winner, game, startTime);
+                    matchSummaries.add(match);
                 }
             }
         } catch (Exception e) {
-            Log.e("CSVParser", "Error reading CSV file", e);
+            Log.e("CSVParser", "Error reading CSV: " + e.getMessage());
             return null;
         }
-
         return matchSummaries;
     }
 

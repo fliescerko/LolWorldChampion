@@ -2,6 +2,8 @@ package com.example.lolworldchampion;
 
 import android.util.Log;
 
+import com.google.gson.Gson;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,7 +15,7 @@ import java.util.Map;
 public class JsonParser {
     public static MatchSummary parseMatchJson(String jsonString, Map<String, Map<Integer, String>> participantMap, String matchId) throws JSONException {
         JSONObject json = new JSONObject(jsonString);
-        MatchSummary matchSummary = new MatchSummary(matchId, "", "", ""); // 传入空字符串
+        MatchSummary matchSummary = new Gson().fromJson(jsonString, MatchSummary.class);
 
         int frameInterval = json.optInt("frameInterval", 0);
 

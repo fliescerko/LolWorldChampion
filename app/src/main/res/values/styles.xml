@@ -8,8 +8,10 @@
     </style>
 
     <!-- 自定义按钮样式 -->
-    <style name="CustomButtonStyle" parent="@android:style/Widget.Button">
-        <item name="android:background">#00FF00</item>
-        <item name="android:textColor">#FFFFFF</item>
+
+    <style name="CustomButtonStyle" parent="Widget.AppCompat.Button.Colored">
+        <item name="android:background">@drawable/button_background</item>
+        <item name="android:textColor">@color/button_text_color</item>
+        <item name="android:textSize">16sp</item>
     </style>
 </resources>

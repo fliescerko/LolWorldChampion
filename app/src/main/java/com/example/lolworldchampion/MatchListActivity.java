@@ -1,71 +1,277 @@
 package com.example.lolworldchampion;
 
-import android.content.res.AssetManager;
+import android.content.Context;
+import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.lolworldchampion.MatchAdapter;
-import com.example.lolworldchampion.MatchSummary;
-import com.example.lolworldchampion.CSVParser;
-import com.example.lolworldchampion.JsonParser;
-import com.example.lolworldchampion.ParticipantCSVParser;
+import com.google.gson.Gson;
 
-import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.logging.HttpLoggingInterceptor;
 
 public class MatchListActivity extends AppCompatActivity implements MatchAdapter.OnMatchClickListener {
+    private static final String TAG = "MatchListActivity";
+    private static final String WIKI_BASE_URL = "https://lol.fandom.com/wiki/V5_data:";
+    private static final String URL_SUFFIX = "/Timeline?action=edit";
+    private static final int MAX_RETRIES = 3;
+    private static final int REQUEST_DELAY_MS = 1500;
+    private final Gson gson = new Gson();
     private List<MatchSummary> matchSummaries;
+    private MatchAdapter adapter;
+    private ExecutorService executorService;
+    private Map<String, Map<Integer, String>> participantMap;
+    private ProgressBar progressBar;
+    private Handler mainHandler = new Handler(Looper.getMainLooper());
+    private OkHttpClient httpClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_match_list);
 
-        // 解析 participantname.csv 文件
-        Map<String, Map<Integer, String>> participantMap = null;
-        try {
-            // 直接传递 Context 对象给 parseParticipantCSV 方法
-            participantMap = ParticipantCSVParser.parseParticipantCSV(this);
-        } catch (Exception e) {
-            Toast.makeText(this, "Error reading participant CSV file: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-
-        // 加载CSV数据
-        loadCSVData(participantMap);
-
-        // 设置RecyclerView
-        RecyclerView recyclerView = findViewById(R.id.matchRecyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(new MatchAdapter(matchSummaries, this));
+        initViews();
+        initHttpClient();
+        checkNetworkAndLoadData();
     }
 
-    private void loadCSVData(Map<String, Map<Integer, String>> participantMap) {
-        try (InputStream inputStream = getResources().openRawResource(R.raw.match_info)) {
-            matchSummaries = CSVParser.parseMatchSummaries(inputStream);
-            if (matchSummaries == null || matchSummaries.isEmpty()) {
-                Toast.makeText(this, "Failed to load match data", Toast.LENGTH_SHORT).show();
-            } else {
-                // 不需要在这里加载JSON，只在用户点击时加载
-                Log.d("MatchListActivity", "Loaded " + matchSummaries.size() + " matches from CSV");
-            }
-        } catch (Exception e) {
-            Toast.makeText(this, "Error loading match data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            matchSummaries = new ArrayList<>(); // prevent NPE
+    private void initViews() {
+        progressBar = findViewById(R.id.progressBar);
+        RecyclerView recyclerView = findViewById(R.id.matchRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new MatchAdapter(new ArrayList<>(), this); // 初始化为空列表
+        recyclerView.setAdapter(adapter);
+    }
+
+    private void initHttpClient() {
+        httpClient = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC))
+                .build();
+    }
+
+    private void checkNetworkAndLoadData() {
+        if (!isNetworkAvailable()) {
+            showToast("请检查网络连接");
+            return;
         }
+        progressBar.setVisibility(View.VISIBLE);
+        executorService = Executors.newFixedThreadPool(4);
+        loadInitialData();
+    }
+
+    private void loadInitialData() {
+        executorService.execute(() -> {
+            try {
+                // 1. 加载参与者数据
+                participantMap = ParticipantCSVParser.parseParticipantCSV(this);
+
+                // 2. 加载比赛基础信息
+                try (InputStream inputStream = getResources().openRawResource(R.raw.match_info)) {
+                    List<MatchSummary> summaries = CSVParser.parseMatchSummaries(inputStream);
+
+                    runOnUiThread(() -> {
+                        if (summaries == null || summaries.isEmpty()) {
+                            showToast("未找到比赛数据");
+                            return;
+                        }
+
+                        matchSummaries = summaries;
+                        adapter.updateData(matchSummaries);
+                        fetchTimelineData();
+                    });
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "初始化数据加载失败", e);
+                showToast("数据加载失败: " + e.getMessage());
+            }
+        });
+    }
+
+    private void fetchTimelineData() {
+        for (int i = 0; i < matchSummaries.size(); i++) {
+            final int position = i;
+            mainHandler.postDelayed(() ->
+                            fetchMatchWithRetry(matchSummaries.get(position), position, MAX_RETRIES),
+                    i * REQUEST_DELAY_MS
+            );
+        }
+    }
+
+    private void fetchMatchWithRetry(MatchSummary summary, int position, int retriesLeft) {
+        String url = WIKI_BASE_URL + summary.getMatchId() + URL_SUFFIX;
+        Log.d(TAG, "请求URL: " + url);
+
+        Request request = new Request.Builder()
+                .url(url)
+                .header("User-Agent", "Mozilla/5.0")
+                .header("Accept", "text/html")
+                .build();
+
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(TAG, "请求失败: " + summary.getMatchId(), e);
+                if (retriesLeft > 0) {
+                    mainHandler.postDelayed(() ->
+                                    fetchMatchWithRetry(summary, position, retriesLeft - 1),
+                            2000
+                    );
+                } else {
+                    showToast(summary.getMatchId() + " 数据加载失败");
+                }
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    Log.e(TAG, "HTTP错误: " + response.code() + " - " + summary.getMatchId());
+                    if (retriesLeft > 0) {
+                        mainHandler.postDelayed(() ->
+                                        fetchMatchWithRetry(summary, position, retriesLeft - 1),
+                                2000
+                        );
+                    }
+                    return;
+                }
+
+                try {
+                    String html = response.body().string();
+                    processResponse(html, summary, position);
+                } catch (Exception e) {
+                    Log.e(TAG, "数据处理错误: " + summary.getMatchId(), e);
+                }
+            }
+        });
+    }
+
+    private void processResponse(String html, MatchSummary summary, int position) {
+        try {
+            String jsonData = extractJsonFromHtml(html);
+            if (jsonData == null) {
+                Log.e(TAG, "未找到JSON数据: " + summary.getMatchId());
+                return;
+            }
+
+            MatchSummary detailedSummary = JsonParser.parseMatchJson(
+                    jsonData, participantMap, summary.getMatchId());
+
+            // 保留基础信息
+            detailedSummary.setMatchId(summary.getMatchId());
+            detailedSummary.setGame(summary.getGame());
+            detailedSummary.setStartTime(summary.getStartTime());
+            detailedSummary.setBlueTeamFullName(summary.getBlueTeamFullName());
+            detailedSummary.setRedTeamFullName(summary.getRedTeamFullName());
+            detailedSummary.setWinningTeam(summary.getWinningTeam());
+
+            updateUI(position, detailedSummary);
+        } catch (Exception e) {
+            Log.e(TAG, "JSON解析错误: " + summary.getMatchId(), e);
+        }
+    }
+
+    private String extractJsonFromHtml(String html) {
+        int start = html.indexOf("<textarea");
+        if (start == -1) return null;
+
+        start = html.indexOf(">", start);
+        if (start == -1) return null;
+        start++;
+
+        int end = html.indexOf("</textarea>", start);
+        if (end == -1) return null;
+
+        return html.substring(start, end).trim();
+    }
+
+    private void updateUI(int position, MatchSummary summary) {
+        runOnUiThread(() -> {
+            matchSummaries.set(position, summary);
+            adapter.notifyItemChanged(position);
+
+            // 检查是否全部加载完成
+            if (position == matchSummaries.size() - 1) {
+                progressBar.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
+
+    private void showToast(String message) {
+        mainHandler.post(() -> Toast.makeText(
+                MatchListActivity.this,
+                message,
+                Toast.LENGTH_LONG
+        ).show());
     }
 
     @Override
-    public void onMatchClick(String jsonFileName) {
-        // 直接传递文件名（不含扩展名）
-        TimelineActivity.startActivity(this, jsonFileName);
+    public void onMatchClick(String matchId) {
+        if (matchId == null) {
+            Toast.makeText(this, "无效的比赛ID", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        for (MatchSummary summary : matchSummaries) {
+            // 双重空值检查
+            if (summary != null &&
+                    summary.getMatchId() != null &&
+                    summary.getMatchId().equals(matchId)) {
+
+                // 转换为JSON字符串（添加空检查）
+                if (summary.getBlueTeamFullName() == null) {
+                    summary.setBlueTeamFullName("未知队伍");
+                }
+                if (summary.getRedTeamFullName() == null) {
+                    summary.setRedTeamFullName("未知队伍");
+                }
+
+                String json = new Gson().toJson(summary);
+                Intent intent = new Intent(this, TimelineActivity.class);
+                intent.putExtra("match_json", json);
+                startActivity(intent);
+                return;
+            }
+        }
+        Toast.makeText(this, "未找到比赛数据", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (executorService != null) {
+            executorService.shutdownNow();
+        }
+        mainHandler.removeCallbacksAndMessages(null);
     }
 }
