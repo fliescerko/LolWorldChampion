@@ -1,10 +1,12 @@
 package com.example.lolworldchampion;
 
+import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -40,24 +42,33 @@ public class MatchAdapter extends RecyclerView.Adapter<MatchAdapter.MatchViewHol
     }
 
     // MatchAdapter.java
+    // MatchAdapter.java
     @Override
     public void onBindViewHolder(@NonNull MatchViewHolder holder, int position) {
         MatchSummary matchSummary = matchSummaries.get(position);
 
-        // 标题格式："Team1 vs Team2 (Game)"
         String title = String.format("%s vs %s (%s)",
                 matchSummary.getBlueTeamFullName(),
                 matchSummary.getRedTeamFullName(),
                 matchSummary.getGame());
 
-        // 日期显示："开始时间: 时间戳"
         String dateText = "开始时间: " + matchSummary.getStartTime();
 
         holder.matchName.setText(title);
-        holder.matchDate.setText(dateText); // 更新为显示 start_time
+        holder.matchDate.setText(dateText);
 
-        holder.itemView.setOnClickListener(v -> listener.onMatchClick(matchSummary.getMatchId()));
+        holder.itemView.setOnClickListener(v -> {
+            Log.d("MatchAdapter", "点击比赛: " + matchSummary.getMatchId());
 
+            // 只传递基本信息和matchId，不传递时间线数据
+            Intent intent = new Intent(v.getContext(), ChoiceActivity.class);
+            intent.putExtra("match_id", matchSummary.getMatchId());
+            intent.putExtra("blue_team", matchSummary.getBlueTeamFullName());
+            intent.putExtra("red_team", matchSummary.getRedTeamFullName());
+            intent.putExtra("game", matchSummary.getGame());
+            intent.putExtra("start_time", matchSummary.getStartTime());
+            v.getContext().startActivity(intent);
+        });
     }
 
     @Override

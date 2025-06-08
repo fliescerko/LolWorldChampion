@@ -125,11 +125,12 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                 iconResId = R.drawable.ic_building_kill;
                 break;
             case "英雄击杀":
-            case "单杀":
+
                 iconResId = R.drawable.ic_kills;
                 break;
             case "龙魂获取时间点":
                 iconResId = R.drawable.ic_monster_kill;
+                break;
             default:
                 iconResId = R.drawable.ic_launcher_foreground;
                 break;

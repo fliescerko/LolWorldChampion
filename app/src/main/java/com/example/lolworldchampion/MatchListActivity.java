@@ -48,16 +48,24 @@ public class MatchListActivity extends AppCompatActivity implements MatchAdapter
     private ProgressBar progressBar;
     private Handler mainHandler = new Handler(Looper.getMainLooper());
     private OkHttpClient httpClient;
+    private String filterYear;
+    private String filterLeague;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_match_list);
 
+        // Get filter parameters from intent
+        Intent intent = getIntent();
+        filterYear = intent.getStringExtra("year");
+        filterLeague = intent.getStringExtra("league");
+
         initViews();
         initHttpClient();
         checkNetworkAndLoadData();
     }
+
 
     private void initViews() {
         progressBar = findViewById(R.id.progressBar);
@@ -85,34 +93,58 @@ public class MatchListActivity extends AppCompatActivity implements MatchAdapter
         loadInitialData();
     }
 
+    // 移除fetchTimelineData()方法调用，只加载基本信息
     private void loadInitialData() {
         executorService.execute(() -> {
             try {
-                // 1. 加载参与者数据
+                // 只需要加载参与者数据和比赛基本信息
                 participantMap = ParticipantCSVParser.parseParticipantCSV(this);
 
-                // 2. 加载比赛基础信息
                 try (InputStream inputStream = getResources().openRawResource(R.raw.match_info)) {
                     List<MatchSummary> summaries = CSVParser.parseMatchSummaries(inputStream);
+                    List<MatchSummary> filteredSummaries = filterMatches(summaries);
 
                     runOnUiThread(() -> {
-                        if (summaries == null || summaries.isEmpty()) {
-                            showToast("未找到比赛数据");
+                        if (filteredSummaries.isEmpty()) {
+                            showToast("没有找到匹配的比赛");
+                            progressBar.setVisibility(View.GONE);
                             return;
                         }
 
-                        matchSummaries = summaries;
+                        matchSummaries = filteredSummaries;
                         adapter.updateData(matchSummaries);
-                        fetchTimelineData();
+                        progressBar.setVisibility(View.GONE); // 隐藏进度条
                     });
                 }
             } catch (Exception e) {
-                Log.e(TAG, "初始化数据加载失败", e);
+                Log.e(TAG, "数据加载失败", e);
                 showToast("数据加载失败: " + e.getMessage());
             }
         });
     }
+    private List<MatchSummary> filterMatches(List<MatchSummary> allMatches) {
+        List<MatchSummary> filtered = new ArrayList<>();
+        Log.d(TAG, "Applying filters - Year: " + filterYear + ", League: " + filterLeague);
 
+        for (MatchSummary match : allMatches) {
+            boolean yearMatch = filterYear == null ||
+                    (match.getYear() != null && match.getYear().contains(filterYear));
+            boolean leagueMatch = filterLeague == null ||
+                    (match.getLeague() != null && match.getLeague().equalsIgnoreCase(filterLeague));
+
+            Log.d(TAG, "Match ID: " + match.getMatchId() +
+                    " | Year: " + match.getYear() +
+                    " | League: " + match.getLeague() +
+                    " | Passes: " + (yearMatch && leagueMatch));
+
+            if (yearMatch && leagueMatch) {
+                filtered.add(match);
+            }
+        }
+
+        Log.d(TAG, "Filtered matches count: " + filtered.size());
+        return filtered;
+    }
     private void fetchTimelineData() {
         for (int i = 0; i < matchSummaries.size(); i++) {
             final int position = i;
@@ -237,28 +269,14 @@ public class MatchListActivity extends AppCompatActivity implements MatchAdapter
 
     @Override
     public void onMatchClick(String matchId) {
-        if (matchId == null) {
-            Toast.makeText(this, "无效的比赛ID", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        Toast.makeText(this, "点击了比赛: " + matchId, Toast.LENGTH_SHORT).show();
+        Log.d("MatchListActivity", "点击比赛: " + matchId);
 
+        // 查找对应的MatchSummary
         for (MatchSummary summary : matchSummaries) {
-            // 双重空值检查
-            if (summary != null &&
-                    summary.getMatchId() != null &&
-                    summary.getMatchId().equals(matchId)) {
-
-                // 转换为JSON字符串（添加空检查）
-                if (summary.getBlueTeamFullName() == null) {
-                    summary.setBlueTeamFullName("未知队伍");
-                }
-                if (summary.getRedTeamFullName() == null) {
-                    summary.setRedTeamFullName("未知队伍");
-                }
-
-                String json = new Gson().toJson(summary);
-                Intent intent = new Intent(this, TimelineActivity.class);
-                intent.putExtra("match_json", json);
+            if (summary.getMatchId().equals(matchId)) {
+                Intent intent = new Intent(this, ChoiceActivity.class);
+                intent.putExtra("match_summary", summary);
                 startActivity(intent);
                 return;
             }

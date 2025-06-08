@@ -9,6 +9,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -18,9 +20,15 @@ public class JsonParser {
         MatchSummary matchSummary = new Gson().fromJson(jsonString, MatchSummary.class);
 
         int frameInterval = json.optInt("frameInterval", 0);
-
+        Log.d("JsonParser", "解析比赛: " + matchId + ", frameInterval: " + frameInterval);
         JSONArray framesArray = json.getJSONArray("frames");
+        if (framesArray == null) {
+            Log.e("JsonParser", "frames数组不存在于JSON中");
+            return matchSummary;
+        }
+
         List<Frame> frames = new ArrayList<>();
+        Log.d("JsonParser", "总帧数: " + framesArray.length());
 
         for (int i = 0; i < framesArray.length(); i++) {
             JSONObject frameObj = framesArray.getJSONObject(i);
@@ -37,11 +45,35 @@ public class JsonParser {
             }
 
             frame.setEvents(events);
+            JSONObject participantFramesObj = frameObj.optJSONObject("participantFrames");
+            if (participantFramesObj != null) {
+                Map<Integer, ParticipantFrame> participantFrames = new HashMap<>();
+
+                // 获取所有参与者ID
+                Iterator<String> keys = participantFramesObj.keys();
+                while (keys.hasNext()) {
+                    String participantIdStr = keys.next();
+                    try {
+                        int participantId = Integer.parseInt(participantIdStr);
+                        JSONObject frameData = participantFramesObj.getJSONObject(participantIdStr);
+
+                        ParticipantFrame participantFrame = parseParticipantFrame(frameData);
+                        participantFrame.setParticipantId(participantId);
+
+                        participantFrames.put(participantId, participantFrame);
+                    } catch (NumberFormatException e) {
+                        Log.e("JsonParser", "无效的参与者ID: " + participantIdStr);
+                    }
+                }
+
+                frame.setParticipantFrames(participantFrames);
+            }
+
             frames.add(frame);
         }
 
         matchSummary.setFrames(frames);
-
+        Log.d("JsonParser", "成功解析帧数: " + frames.size());
         if (participantMap != null) {
 
             Map<Integer, String> participants = participantMap.get(matchId);
@@ -151,7 +183,87 @@ public class JsonParser {
 
         return event;
     }
+    private static ParticipantFrame parseParticipantFrame(JSONObject frameData) throws JSONException {
+        ParticipantFrame frame = new ParticipantFrame();
 
+        // 解析championStats
+        JSONObject championStatsObj = frameData.optJSONObject("championStats");
+        if (championStatsObj != null) {
+            ChampionStats championStats = new ChampionStats();
+            championStats.setAbilityHaste(championStatsObj.optInt("abilityHaste"));
+            championStats.setAbilityPower(championStatsObj.optInt("abilityPower"));
+            championStats.setArmor(championStatsObj.optInt("armor"));
+            championStats.setArmorPen(championStatsObj.optInt("armorPen"));
+            championStats.setArmorPenPercent(championStatsObj.optInt("armorPenPercent"));
+            championStats.setAttackDamage(championStatsObj.optInt("attackDamage"));
+            championStats.setAttackSpeed(championStatsObj.optInt("attackSpeed"));
+            championStats.setBonusArmorPenPercent(championStatsObj.optInt("bonusArmorPenPercent"));
+            championStats.setBonusMagicPenPercent(championStatsObj.optInt("bonusMagicPenPercent"));
+            championStats.setCcReduction(championStatsObj.optInt("ccReduction"));
+            championStats.setCooldownReduction(championStatsObj.optInt("cooldownReduction"));
+            championStats.setHealth(championStatsObj.optInt("health"));
+            championStats.setHealthMax(championStatsObj.optInt("healthMax"));
+            championStats.setHealthRegen(championStatsObj.optInt("healthRegen"));
+            championStats.setLifesteal(championStatsObj.optInt("lifesteal"));
+            championStats.setMagicPen(championStatsObj.optInt("magicPen"));
+            championStats.setMagicPenPercent(championStatsObj.optInt("magicPenPercent"));
+            championStats.setMagicResist(championStatsObj.optInt("magicResist"));
+            championStats.setMovementSpeed(championStatsObj.optInt("movementSpeed"));
+            championStats.setOmnivamp(championStatsObj.optInt("omnivamp"));
+            championStats.setPhysicalVamp(championStatsObj.optInt("physicalVamp"));
+            championStats.setPower(championStatsObj.optInt("power"));
+            championStats.setPowerMax(championStatsObj.optInt("powerMax"));
+            championStats.setPowerRegen(championStatsObj.optInt("powerRegen"));
+            championStats.setSpellVamp(championStatsObj.optInt("spellVamp"));
+
+            frame.setChampionStats(championStats);
+        }
+
+        // 解析当前金币
+        frame.setCurrentGold(frameData.optInt("currentGold"));
+
+        // 解析伤害统计
+        JSONObject damageStatsObj = frameData.optJSONObject("damageStats");
+        if (damageStatsObj != null) {
+            DamageStats damageStats = new DamageStats();
+            damageStats.setMagicDamageDone(damageStatsObj.optInt("magicDamageDone"));
+            damageStats.setMagicDamageDoneToChampions(damageStatsObj.optInt("magicDamageDoneToChampions"));
+            damageStats.setMagicDamageTaken(damageStatsObj.optInt("magicDamageTaken"));
+            damageStats.setPhysicalDamageDone(damageStatsObj.optInt("physicalDamageDone"));
+            damageStats.setPhysicalDamageDoneToChampions(damageStatsObj.optInt("physicalDamageDoneToChampions"));
+            damageStats.setPhysicalDamageTaken(damageStatsObj.optInt("physicalDamageTaken"));
+            damageStats.setTotalDamageDone(damageStatsObj.optInt("totalDamageDone"));
+            damageStats.setTotalDamageDoneToChampions(damageStatsObj.optInt("totalDamageDoneToChampions"));
+            damageStats.setTotalDamageTaken(damageStatsObj.optInt("totalDamageTaken"));
+            damageStats.setTrueDamageDone(damageStatsObj.optInt("trueDamageDone"));
+            damageStats.setTrueDamageDoneToChampions(damageStatsObj.optInt("trueDamageDoneToChampions"));
+            damageStats.setTrueDamageTaken(damageStatsObj.optInt("trueDamageTaken"));
+
+            frame.setDamageStats(damageStats);
+        }
+
+        // 解析其他属性
+        frame.setGoldPerSecond(frameData.optInt("goldPerSecond"));
+        frame.setJungleMinionsKilled(frameData.optInt("jungleMinionsKilled"));
+        frame.setLevel(frameData.optInt("level"));
+        frame.setMinionsKilled(frameData.optInt("minionsKilled"));
+        frame.setParticipantId(frameData.optInt("participantId"));
+
+        // 解析位置
+        JSONObject positionObj = frameData.optJSONObject("position");
+        if (positionObj != null) {
+            Position position = new Position();
+            position.setX(positionObj.optInt("x"));
+            position.setY(positionObj.optInt("y"));
+            frame.setPosition(position);
+        }
+
+        frame.setTimeEnemySpentControlled(frameData.optInt("timeEnemySpentControlled"));
+        frame.setTotalGold(frameData.optInt("totalGold"));
+        frame.setXp(frameData.optInt("xp"));
+
+        return frame;
+    }
     private static List<DamageData> parseDamageData(JSONArray damageArray) throws JSONException {
         List<DamageData> damageList = new ArrayList<>();
 

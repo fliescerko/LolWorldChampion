@@ -20,4 +20,7 @@
     <!-- 辅助文本颜色 -->
     <color name="secondary_text_color">#757575</color>
     <color name = "beijing">#F9F2EF</color>
+
+
+    <color name="ripple_effect">#0DFFFFFF</color> <!-- 透明白色涟漪 -->
 </resources>

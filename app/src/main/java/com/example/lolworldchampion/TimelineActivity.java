@@ -18,62 +18,101 @@ import java.util.List;
 
 public class TimelineActivity extends AppCompatActivity {
     private static final String TAG = "TimelineActivity";
-    private static final String MATCH_SUMMARY = "match_summary";
-
-    public static void startActivity(Context context, String matchJson) {
-        Intent intent = new Intent(context, TimelineActivity.class);
-        intent.putExtra("match_json", matchJson);
-        context.startActivity(intent);
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_timeline);
-        String json = getIntent().getStringExtra("match_json");
-        MatchSummary matchSummary = new Gson().fromJson(json, MatchSummary.class);
-        if (matchSummary == null) {
-            showErrorAndFinish("No match summary specified");
+
+        // 1. 检查Intent
+        if (getIntent() == null) {
+            showErrorAndFinish("No intent provided");
             return;
         }
+
+        // 2. 获取MatchSummary对象
+        MatchSummary matchSummary;
+        try {
+            matchSummary = (MatchSummary) getIntent().getSerializableExtra("match_summary");
+        } catch (ClassCastException e) {
+            showErrorAndFinish("Invalid data format");
+            return;
+        }
+
+        // 3. 验证数据
+        if (matchSummary == null) {
+            showErrorAndFinish("No match summary provided");
+            return;
+        }
+
+        Log.d(TAG, "Received match ID: " + matchSummary.getMatchId());
+        Log.d(TAG, "Frame count: " + (matchSummary.getFrames() != null ? matchSummary.getFrames().size() : "null"));
 
         setupRecyclerView(matchSummary);
     }
 
     private void setupRecyclerView(MatchSummary matchSummary) {
-        if (matchSummary.getFrames() == null || matchSummary.getFrames().isEmpty()) {
-            showErrorAndFinish("No timeline data available");
+        // 验证frames数据
+        if (matchSummary.getFrames() == null) {
+            showErrorAndFinish("Frames data is null");
             return;
         }
+
+        if (matchSummary.getFrames().isEmpty()) {
+            showErrorAndFinish("Frames data is empty");
+            return;
+        }
+
+        // 打印详细帧信息
+        for (int i = 0; i < Math.min(5, matchSummary.getFrames().size()); i++) {
+            Frame frame = matchSummary.getFrames().get(i);
+            Log.d(TAG, String.format("Frame %d: %d events", i,
+                    frame.getEvents() != null ? frame.getEvents().size() : 0));
+        }
+
+        // 合并所有事件
+        List<FrameEvent> allEvents = new ArrayList<>();
+        for (Frame frame : matchSummary.getFrames()) {
+            if (frame.getEvents() != null) {
+                allEvents.addAll(frame.getEvents());
+            }
+        }
+
+        Log.d(TAG, "Total events before filtering: " + allEvents.size());
+
+        // 过滤事件
         List<String> allowedTypes = Arrays.asList(
                 "CHAMPION_KILL",
-                "CHAMPION_SPECIAL_KILL",
                 "ELITE_MONSTER_KILL",
                 "TURRET_PLATE_DESTROYED",
                 "BUILDING_KILL",
                 "DRAGON_SOUL_GIVEN"
         );
-        // 合并所有帧的事件
-        List<FrameEvent> allEvents = new ArrayList<>();
-        for (Frame frame : matchSummary.getFrames()) {
-            if (frame.getEvents() != null) {
-                for (FrameEvent event : frame.getEvents()) {
-                    if (allowedTypes.contains(event.getType())) {
-                        allEvents.add(event);
-                    }
-                }
+
+        List<FrameEvent> filteredEvents = new ArrayList<>();
+        for (FrameEvent event : allEvents) {
+            if (event != null && event.getType() != null &&
+                    allowedTypes.contains(event.getType())) {
+                filteredEvents.add(event);
             }
         }
 
-        // 初始化RecyclerView
+        Log.d(TAG, "Total events after filtering: " + filteredEvents.size());
+
+        if (filteredEvents.isEmpty()) {
+            showErrorAndFinish("No events after filtering");
+            return;
+        }
+
+        // 设置RecyclerView
         RecyclerView recyclerView = findViewById(R.id.timelineRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        String matchId = matchSummary.getMatchId(); // 获取 matchId
-        recyclerView.setAdapter(new TimelineAdapter(allEvents, this, matchId)); // 传递 matchId
+        recyclerView.setAdapter(new TimelineAdapter(filteredEvents, this, matchSummary.getMatchId()));
     }
 
     private void showErrorAndFinish(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        Log.e(TAG, message);
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
         finish();
     }
 }

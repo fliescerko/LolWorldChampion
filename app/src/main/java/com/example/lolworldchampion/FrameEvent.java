@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 
 public class FrameEvent implements Serializable {
+
     private int timestamp;
     private String type;
     private long realTimestamp;

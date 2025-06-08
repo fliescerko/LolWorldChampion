@@ -15,8 +15,10 @@ public class MatchSummary implements Serializable {
     private String game;
     private String startTime; // 添加 startTime 字段
     private List<Frame> frames; // 存储时间线数据
+    private String year; // 添加 year 字段
+    private String league; // 添加 league 字段
 
-    public MatchSummary(String matchId, String blueTeamFullName, String redTeamFullName, String winningTeam, String game, String startTime) {
+    public MatchSummary(String matchId, String blueTeamFullName, String redTeamFullName, String winningTeam, String game, String startTime, String year, String league) {
         this.matchId = matchId;
         this.blueTeamFullName = blueTeamFullName;
         this.redTeamFullName = redTeamFullName;
@@ -26,6 +28,8 @@ public class MatchSummary implements Serializable {
         this.gameId = gameId;
         this.game = game;
         this.startTime = startTime; // 初始化 startTime 字段
+        this.year = year; // 初始化 year 字段
+        this.league = league; // 初始化 league 字段
     }
     public MatchSummary() {}
     // Getter 和 Setter 方法
@@ -100,4 +104,21 @@ public class MatchSummary implements Serializable {
     public void setStartTime(String startTime) {
         this.startTime = startTime;
     }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
+    }
+
+    public String getLeague() {
+        return league;
+    }
+
+    public void setLeague(String league) {
+        this.league = league;
+    }
 }
+

@@ -4,9 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
-
 import androidx.appcompat.app.AppCompatActivity;
-
 
 import com.example.lolworldchampion.databinding.ActivityMainBinding;
 
@@ -21,11 +19,11 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // 使用binding获取视图，而不是findViewById
         binding.btnMatchList.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, MatchListActivity.class);
+                // Navigate to FilterActivity first
+                Intent intent = new Intent(MainActivity.this, FilterActivity.class);
                 startActivity(intent);
             }
         });
@@ -37,14 +35,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        binding.btnThirdChannel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // 第三个通道的跳转逻辑
-            }
-        });
-
-        // 底部导航设置
 
     }
 }

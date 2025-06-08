@@ -22,8 +22,9 @@ public class CSVParser {
                     String winner = fields[3].trim();
                     String startTime = fields[4].trim(); // 第5列
                     String game = fields[6].trim(); // 第7列
-
-                    MatchSummary match = new MatchSummary(matchId, blueTeam, redTeam, winner, game, startTime);
+                    String year = fields[8].trim(); // 假设 year 在第 8 列
+                    String league = fields[7].trim(); // 假设 league 在第 9 列
+                    MatchSummary match = new MatchSummary(matchId, blueTeam, redTeam, winner, game, startTime,year, league);
                     matchSummaries.add(match);
                 }
             }
