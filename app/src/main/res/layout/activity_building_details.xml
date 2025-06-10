@@ -59,6 +59,7 @@
             android:layout_height="365dp"
             android:scaleType="fitCenter"
             android:src="@drawable/img"
+            android:alpha="0.5"
             />
 
         <View

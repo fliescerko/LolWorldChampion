@@ -108,7 +108,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                             iconResId = R.drawable.icon_fire_dragon; // 火龙图标（VectorDrawable）
                         } else if ("HEXTECH_DRAGON".equals(monsterSubtype)) {
                             iconResId = R.drawable.icon_hextech_dragon;
-                        } else if ("ELECTRIC_DRAGON".equals(monsterSubtype)) {
+                        } else if ("EARTH_DRAGON".equals(monsterSubtype)) {
                             iconResId = R.drawable.icon_earth_dragon;
                         } else if ("CHEMTECH_DRAGON".equals(monsterSubtype)) {
                             iconResId = R.drawable.icon_chemtech_dragon;

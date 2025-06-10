@@ -35,7 +35,7 @@ public class MonsterDetailsActivity extends AppCompatActivity {
         typeView.setText("野怪类型: " + mapMonsterType(monsterType));
 
         // 显示野怪种类
-        if (!monsterSubType.isEmpty()) {
+        if (monsterSubType != null && !monsterSubType.isEmpty()) {
             subTypeView.setText("野怪种类: " + mapMonsterSubType(monsterSubType));
         } else {
             subTypeView.setVisibility(View.GONE);
